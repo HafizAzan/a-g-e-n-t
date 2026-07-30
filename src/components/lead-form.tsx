@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2 } from 'lucide-react';
 
 export type LeadFormValues = {
   prompt: string;
@@ -20,12 +20,7 @@ type LeadFormProps = {
   onSubmit: () => void;
 };
 
-export function LeadForm({
-  values,
-  loading,
-  onChange,
-  onSubmit,
-}: LeadFormProps) {
+export function LeadForm({ values, loading, onChange, onSubmit }: LeadFormProps) {
   return (
     <form
       className="space-y-6"
@@ -39,17 +34,14 @@ export function LeadForm({
         <Textarea
           id="prompt"
           value={values.prompt}
-          onChange={(event) =>
-            onChange({ ...values, prompt: event.target.value })
-          }
+          onChange={(event) => onChange({ ...values, prompt: event.target.value })}
           placeholder="Find gyms in New York that may need a new website."
-          className="min-h-[150px] resize-y text-base"
+          className="min-h-37.5 resize-y text-base"
           required
         />
         <p className="text-xs text-muted-foreground">
-          On generate, the app first loads every file from{" "}
-          <code className="text-foreground">src/prompts/</code>, then sends your
-          request to Cursor.
+          On generate, the app first loads every file from{' '}
+          <code className="text-foreground">src/prompts/</code>, then sends your request to Cursor.
         </p>
       </div>
 
@@ -59,9 +51,7 @@ export function LeadForm({
           <Input
             id="country"
             value={values.country}
-            onChange={(event) =>
-              onChange({ ...values, country: event.target.value })
-            }
+            onChange={(event) => onChange({ ...values, country: event.target.value })}
             placeholder="United States"
           />
         </div>
@@ -70,9 +60,7 @@ export function LeadForm({
           <Input
             id="city"
             value={values.city}
-            onChange={(event) =>
-              onChange({ ...values, city: event.target.value })
-            }
+            onChange={(event) => onChange({ ...values, city: event.target.value })}
             placeholder="New York"
           />
         </div>
@@ -95,19 +83,14 @@ export function LeadForm({
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Button
-          type="submit"
-          size="lg"
-          disabled={loading}
-          className="w-full sm:w-auto"
-        >
+        <Button type="submit" size="lg" disabled={loading} className="w-full sm:w-auto">
           {loading ? (
             <>
               <Loader2 className="animate-spin" />
               Reading prompts & generating...
             </>
           ) : (
-            "Generate Leads"
+            'Generate Leads'
           )}
         </Button>
         {loading ? (

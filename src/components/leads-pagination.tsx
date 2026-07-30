@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+} from '@/components/ui/select';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type LeadsPaginationProps = {
   page: number;
@@ -33,10 +33,10 @@ export function LeadsPagination({
   return (
     <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
-        Showing{" "}
+        Showing{' '}
         <span className="text-foreground">
           {start}-{end}
-        </span>{" "}
+        </span>{' '}
         of <span className="text-foreground">{totalItems}</span>
       </p>
 
@@ -47,7 +47,7 @@ export function LeadsPagination({
             value={String(pageSize)}
             onValueChange={(value) => onPageSizeChange(Number(value))}
           >
-            <SelectTrigger className="h-8 w-[84px]">
+            <SelectTrigger className="h-8 w-21">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -70,7 +70,7 @@ export function LeadsPagination({
             <ChevronLeft />
             Prev
           </Button>
-          <span className="min-w-[72px] text-center text-sm text-muted-foreground">
+          <span className="min-w-18 text-center text-sm text-muted-foreground">
             {safePage} / {totalPages}
           </span>
           <Button

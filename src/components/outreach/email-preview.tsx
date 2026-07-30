@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { Wrench } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { EmailStatusBadge } from "@/components/outreach/email-status-badge";
-import { buildEmailBody } from "@/lib/templates";
-import type { OutreachDraft } from "@/types/outreach";
+import { EmailStatusBadge } from '@/components/outreach/email-status-badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { buildEmailBody } from '@/lib/templates';
+import type { OutreachDraft } from '@/types/outreach';
+import { Wrench } from 'lucide-react';
 
 type EmailPreviewProps = {
   draft: OutreachDraft;
@@ -16,12 +16,7 @@ type EmailPreviewProps = {
   onFix?: () => void;
 };
 
-export function EmailPreview({
-  draft,
-  fixing = false,
-  onChange,
-  onFix,
-}: EmailPreviewProps) {
+export function EmailPreview({ draft, fixing = false, onChange, onFix }: EmailPreviewProps) {
   function update(patch: Partial<OutreachDraft>) {
     const next = { ...draft, ...patch };
     if (
@@ -47,28 +42,20 @@ export function EmailPreview({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="font-medium">{draft.lead.businessName}</p>
-          <p className="text-sm text-muted-foreground">
-            {draft.lead.email || "No email address"}
-          </p>
+          <p className="text-sm text-muted-foreground">{draft.lead.email || 'No email address'}</p>
         </div>
         <EmailStatusBadge status={draft.status} />
       </div>
 
       <div className="space-y-2">
         <Label>Subject</Label>
-        <Input
-          value={draft.subject}
-          onChange={(e) => update({ subject: e.target.value })}
-        />
+        <Input value={draft.subject} onChange={(e) => update({ subject: e.target.value })} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Greeting</Label>
-          <Input
-            value={draft.greeting}
-            onChange={(e) => update({ greeting: e.target.value })}
-          />
+          <Input value={draft.greeting} onChange={(e) => update({ greeting: e.target.value })} />
         </div>
         <div className="space-y-2">
           <Label>Call to action</Label>
@@ -88,22 +75,16 @@ export function EmailPreview({
       </div>
       <div className="space-y-2">
         <Label>Offer</Label>
-        <Textarea
-          value={draft.offer}
-          onChange={(e) => update({ offer: e.target.value })}
-        />
+        <Textarea value={draft.offer} onChange={(e) => update({ offer: e.target.value })} />
       </div>
       <div className="space-y-2">
         <Label>Signature</Label>
-        <Textarea
-          value={draft.signature}
-          onChange={(e) => update({ signature: e.target.value })}
-        />
+        <Textarea value={draft.signature} onChange={(e) => update({ signature: e.target.value })} />
       </div>
       <div className="space-y-2">
         <Label>Full body preview</Label>
         <Textarea
-          className="min-h-[180px] font-mono text-xs"
+          className="min-h-45 font-mono text-xs"
           value={draft.body}
           onChange={(e) => update({ body: e.target.value })}
         />
@@ -116,14 +97,9 @@ export function EmailPreview({
             <p>{draft.aiReviewNotes}</p>
           </div>
           {draft.needsFix && onFix ? (
-            <Button
-              type="button"
-              size="sm"
-              disabled={fixing}
-              onClick={onFix}
-            >
+            <Button type="button" size="sm" disabled={fixing} onClick={onFix}>
               <Wrench />
-              {fixing ? "AI fixing..." : "Fix"}
+              {fixing ? 'AI fixing...' : 'Fix'}
             </Button>
           ) : null}
         </div>
@@ -142,7 +118,7 @@ export function EmailPreview({
             onChange({
               ...draft,
               approved: true,
-              status: draft.status === "sent" ? "sent" : "approved",
+              status: draft.status === 'sent' ? 'sent' : 'approved',
             })
           }
         >
@@ -155,7 +131,7 @@ export function EmailPreview({
             onChange({
               ...draft,
               approved: false,
-              status: "draft",
+              status: 'draft',
             })
           }
         >
@@ -168,7 +144,7 @@ export function EmailPreview({
             onChange({
               ...draft,
               approved: false,
-              status: "skipped",
+              status: 'skipped',
             })
           }
         >

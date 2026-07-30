@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { DownloadCsvButton } from "@/components/download-csv-button";
-import { UploadCsvButton } from "@/components/upload-csv-button";
-import { LeadForm, type LeadFormValues } from "@/components/lead-form";
-import { LeadsTable } from "@/components/leads-table";
-import { Button } from "@/components/ui/button";
-import type { Lead } from "@/types/lead";
-import type { EmailSendStatus } from "@/types/outreach";
-import { Mail } from "lucide-react";
+import { DownloadCsvButton } from '@/components/download-csv-button';
+import { LeadForm, type LeadFormValues } from '@/components/lead-form';
+import { LeadsTable } from '@/components/leads-table';
+import { Button } from '@/components/ui/button';
+import { UploadCsvButton } from '@/components/upload-csv-button';
+import type { Lead } from '@/types/lead';
+import type { EmailSendStatus } from '@/types/outreach';
+import { Mail } from 'lucide-react';
 
 type LeadsViewProps = {
   values: LeadFormValues;
@@ -45,15 +45,13 @@ export function LeadsView({
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:py-10">
       <header className="space-y-3 border-b border-border pb-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
-          Lead Finder
-        </p>
+        <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Lead Finder</p>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           Generate or upload leads
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Enter prompt, country, city, and limit — or upload a CSV. Results
-          appear in the same table. Use the sidebar for Email Outreach.
+          Enter prompt, country, city, and limit — or upload a CSV. Results appear in the same
+          table. Use the sidebar for Email Outreach.
         </p>
       </header>
 
@@ -88,10 +86,8 @@ export function LeadsView({
           <div>
             <h2 className="text-lg font-medium">Results</h2>
             <p className="text-sm text-muted-foreground">
-              {leads.length} lead{leads.length === 1 ? "" : "s"}
-              {selectedIndexes.length > 0
-                ? ` · ${selectedIndexes.length} selected`
-                : ""}
+              {leads.length} lead{leads.length === 1 ? '' : 's'}
+              {selectedIndexes.length > 0 ? ` · ${selectedIndexes.length} selected` : ''}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

@@ -1,20 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { Eye } from "lucide-react";
-import type { Lead } from "@/types/lead";
-import type { EmailSendStatus } from "@/types/outreach";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { LeadsPagination } from '@/components/leads-pagination';
+import { EmailStatusBadge } from '@/components/outreach/email-status-badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { EmailStatusBadge } from "@/components/outreach/email-status-badge";
-import { LeadsPagination } from "@/components/leads-pagination";
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -22,7 +18,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
+import type { Lead } from '@/types/lead';
+import type { EmailSendStatus } from '@/types/outreach';
+import { Eye } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 type LeadsTableProps = {
   leads: Lead[];
@@ -90,9 +90,7 @@ export function LeadsTable({
 
   const pageRows = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return leads
-      .map((lead, index) => ({ lead, index }))
-      .slice(start, start + pageSize);
+    return leads.map((lead, index) => ({ lead, index })).slice(start, start + pageSize);
   }, [leads, page, pageSize]);
 
   if (leads.length === 0) {
@@ -105,13 +103,12 @@ export function LeadsTable({
     );
   }
 
-  const allSelected =
-    leads.length > 0 && selectedIndexes.length === leads.length;
+  const allSelected = leads.length > 0 && selectedIndexes.length === leads.length;
 
   return (
     <div className="rounded-xl border border-border bg-card/30">
       <div className="leads-table-scroll w-full overflow-x-auto">
-        <Table className="w-full min-w-[960px]">
+        <Table className="w-full min-w-240">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-12">
@@ -134,7 +131,7 @@ export function LeadsTable({
           <TableBody>
             {pageRows.map(({ lead, index }) => {
               const selected = selectedIndexes.includes(index);
-              const status = statusByIndex[index] || "pending";
+              const status = statusByIndex[index] || 'pending';
 
               return (
                 <TableRow key={`${lead.businessName}-${index}`}>
@@ -155,11 +152,7 @@ export function LeadsTable({
                     <CellText value={lead.category} />
                   </TableCell>
                   <TableCell>
-                    <CellText
-                      value={
-                        [lead.city, lead.country].filter(Boolean).join(", ")
-                      }
-                    />
+                    <CellText value={[lead.city, lead.country].filter(Boolean).join(', ')} />
                   </TableCell>
                   <TableCell>
                     <CellText value={lead.email} />
@@ -218,9 +211,7 @@ export function LeadsTable({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>AI Notes</DialogTitle>
-            <DialogDescription>
-              {notesModal?.businessName || "Lead"}
-            </DialogDescription>
+            <DialogDescription>{notesModal?.businessName || 'Lead'}</DialogDescription>
           </DialogHeader>
           <p className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-foreground">
             {notesModal?.notes}
