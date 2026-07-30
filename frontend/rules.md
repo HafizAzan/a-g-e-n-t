@@ -1,0 +1,15 @@
+- Always write beginner-friendly code.
+- Never over-engineer.
+- One component = one responsibility.
+- Keep files under ~200 lines where possible.
+- Explain complex logic with comments.
+- Use TypeScript strictly.
+- Prefer composition over large components.
+- Reuse components before creating new ones.
+- Use consistent naming.
+- Use shadcn/ui whenever possible.
+- Keep UI clean, modern, and responsive.
+- Use mock data until backend integration.
+- Never generate unnecessary code.
+- Always explain your implementation plan first.
+
