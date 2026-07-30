@@ -1,0 +1,23 @@
+{
+  "name": "lead-finder-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lead Finder API — Route → Controller → Service → Repository → Supabase",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.26",
+    "@supabase/supabase-js": "^2.111.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "xlsx": "^0.18.5"
+  }
+}
