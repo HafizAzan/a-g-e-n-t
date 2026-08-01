@@ -5,6 +5,8 @@ const LABELS: Record<EmailSendStatus, string> = {
   pending: "Pending",
   draft: "Draft",
   approved: "Approved",
+  generating: "Generating",
+  waiting: "Waiting",
   sending: "Sending",
   sent: "Sent",
   failed: "Failed",

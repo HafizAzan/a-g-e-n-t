@@ -13,9 +13,11 @@ import type { OutreachDraft } from "@/types/outreach";
 type BulkPreviewViewProps = {
   reviewing: boolean;
   fixingId: string | null;
+  regeneratingId: string | null;
   onReviewAll: () => void;
   onApproveAll: () => void;
   onFixDraft: (draft: OutreachDraft) => void;
+  onRegenerateDraft: (draft: OutreachDraft) => void;
   onRequestSend: () => void;
   confirmOpen: boolean;
   onConfirmOpenChange: (open: boolean) => void;
@@ -25,9 +27,11 @@ type BulkPreviewViewProps = {
 export function BulkPreviewView({
   reviewing,
   fixingId,
+  regeneratingId,
   onReviewAll,
   onApproveAll,
   onFixDraft,
+  onRegenerateDraft,
   onRequestSend,
   confirmOpen,
   onConfirmOpenChange,
@@ -146,8 +150,10 @@ export function BulkPreviewView({
                 <EmailPreview
                   draft={active}
                   fixing={fixingId === active.id}
+                  regenerating={regeneratingId === active.id}
                   onChange={updateDraft}
                   onFix={() => onFixDraft(active)}
+                  onRegenerate={() => onRegenerateDraft(active)}
                 />
               ) : (
                 <p className="text-sm text-muted-foreground">No draft selected.</p>

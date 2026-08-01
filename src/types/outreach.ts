@@ -4,6 +4,8 @@ export type EmailSendStatus =
   | "pending"
   | "draft"
   | "approved"
+  | "generating"
+  | "waiting"
   | "sending"
   | "sent"
   | "failed"
@@ -49,10 +51,12 @@ export type OutreachDraft = {
 export type SendLogEntry = {
   id: string;
   recipient: string;
+  businessName: string;
   subject: string;
   time: string;
   status: EmailSendStatus;
   error: string;
+  delayUsedMs: number | null;
 };
 
 export type AttachmentPayload = {
@@ -61,7 +65,16 @@ export type AttachmentPayload = {
   contentBase64: string;
 };
 
+export type GmailAccountStatus = {
+  id: string;
+  email: string;
+  picture: string | null;
+  connected: boolean;
+  isDefault: boolean;
+};
+
 export type GmailStatus = {
   connected: boolean;
-  email: string | null;
+  accounts: GmailAccountStatus[];
+  defaultAccountId: string | null;
 };

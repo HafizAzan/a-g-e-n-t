@@ -4,6 +4,7 @@ import { sendGmailMessage } from "@/lib/gmail";
 export const runtime = "nodejs";
 
 type Body = {
+  accountId?: string;
   to?: string;
   subject?: string;
   body?: string;
@@ -28,14 +29,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const messageId = await sendGmailMessage({
+    const result = await sendGmailMessage({
+      accountId: data.accountId,
       to,
       subject,
       body,
       attachments: data.attachments,
     });
 
-    return NextResponse.json({ ok: true, messageId });
+    return NextResponse.json({
+      ok: true,
+      messageId: result.messageId,
+      fromEmail: result.fromEmail,
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to send email.";

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGmailStatus, removeAccount } from "@/lib/gmail";
+import { getGmailStatus, setDefaultAccount } from "@/lib/gmail";
 
 export const runtime = "nodejs";
 
@@ -19,12 +19,12 @@ export async function POST(request: Request) {
       );
     }
 
-    await removeAccount(accountId);
+    await setDefaultAccount(accountId);
     const status = await getGmailStatus();
     return NextResponse.json(status);
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Failed to disconnect Gmail.";
+      error instanceof Error ? error.message : "Failed to set default sender.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

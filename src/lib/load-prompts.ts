@@ -1,5 +1,5 @@
-import { readdir, readFile } from "fs/promises";
-import path from "path";
+import { readdir, readFile } from 'fs/promises';
+import path from 'path';
 
 /**
  * Required prompt files, in the exact order they must appear
@@ -7,22 +7,19 @@ import path from "path";
  * numeric prefixes (e.g. 01-system-rule.md).
  */
 export const REQUIRED_PROMPT_FILES = [
-  "system-rule.md",
-  "business-rules.md",
-  "search-strategy.md",
-  "data-accuracy.md",
-  "not-duplicate.md",
-  "lead-scoring.md",
-  "email-generation.md",
-  "output-format.md",
+  'system-rule.md',
+  'business-rules.md',
+  'search-strategy.md',
+  'data-accuracy.md',
+  'not-duplicate.md',
+  'lead-scoring.md',
+  'email-generation.md',
+  'output-format.md',
 ] as const;
 
-const PROMPTS_DIR = path.join(process.cwd(), "src", "prompts");
+const PROMPTS_DIR = path.join(process.cwd(), 'src', 'prompts');
 
-function findMatchingFile(
-  availableFiles: string[],
-  requiredName: string
-): string | undefined {
+function findMatchingFile(availableFiles: string[], requiredName: string): string | undefined {
   const lowerRequired = requiredName.toLowerCase();
 
   return availableFiles.find((file) => {
@@ -31,10 +28,6 @@ function findMatchingFile(
   });
 }
 
-/**
- * Reads every markdown file in src/prompts/ on each call (no cache).
- * Combines them into one system prompt with section headers.
- */
 export async function loadCombinedSystemPrompt(): Promise<string> {
   let entries: string[];
 
@@ -42,13 +35,11 @@ export async function loadCombinedSystemPrompt(): Promise<string> {
     entries = await readdir(PROMPTS_DIR);
   } catch {
     throw new Error(
-      `Prompts folder not found at ${PROMPTS_DIR}. Create src/prompts/ and add the required markdown files.`
+      `Prompts folder not found at ${PROMPTS_DIR}. Create src/prompts/ and add the required markdown files.`,
     );
   }
 
-  const markdownFiles = entries.filter((file) =>
-    file.toLowerCase().endsWith(".md")
-  );
+  const markdownFiles = entries.filter((file) => file.toLowerCase().endsWith('.md'));
 
   if (markdownFiles.length === 0) {
     throw new Error(`No markdown prompt files found in ${PROMPTS_DIR}.`);
@@ -62,7 +53,7 @@ export async function loadCombinedSystemPrompt(): Promise<string> {
 
     if (!match) {
       throw new Error(
-        `Required prompt file missing: ${requiredName}. Expected a file named "${requiredName}" or ending with "-${requiredName}" inside src/prompts/.`
+        `Required prompt file missing: ${requiredName}. Expected a file named "${requiredName}" or ending with "-${requiredName}" inside src/prompts/.`,
       );
     }
 
@@ -70,9 +61,7 @@ export async function loadCombinedSystemPrompt(): Promise<string> {
     used.add(match);
   }
 
-  const extras = markdownFiles
-    .filter((file) => !used.has(file))
-    .sort((a, b) => a.localeCompare(b));
+  const extras = markdownFiles.filter((file) => !used.has(file)).sort((a, b) => a.localeCompare(b));
 
   orderedFiles.push(...extras);
 
@@ -80,18 +69,12 @@ export async function loadCombinedSystemPrompt(): Promise<string> {
 
   for (const fileName of orderedFiles) {
     const fullPath = path.join(PROMPTS_DIR, fileName);
-    const content = await readFile(fullPath, "utf8");
+    const content = await readFile(fullPath, 'utf8');
 
     sections.push(
-      [
-        "====================",
-        fileName,
-        "====================",
-        "",
-        content.trim(),
-      ].join("\n")
+      ['====================', fileName, '====================', '', content.trim()].join('\n'),
     );
   }
 
-  return sections.join("\n\n");
+  return sections.join('\n\n');
 }

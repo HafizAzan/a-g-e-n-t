@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGmailStatus } from "@/lib/gmail";
+import { getGmailStatus } from "@/lib/gmail/status";
 
 export const runtime = "nodejs";
 

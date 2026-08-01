@@ -7,16 +7,25 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { buildEmailBody } from '@/lib/templates';
 import type { OutreachDraft } from '@/types/outreach';
-import { Wrench } from 'lucide-react';
+import { RefreshCw, Wrench } from 'lucide-react';
 
 type EmailPreviewProps = {
   draft: OutreachDraft;
   fixing?: boolean;
+  regenerating?: boolean;
   onChange: (draft: OutreachDraft) => void;
   onFix?: () => void;
+  onRegenerate?: () => void;
 };
 
-export function EmailPreview({ draft, fixing = false, onChange, onFix }: EmailPreviewProps) {
+export function EmailPreview({
+  draft,
+  fixing = false,
+  regenerating = false,
+  onChange,
+  onFix,
+  onRegenerate,
+}: EmailPreviewProps) {
   function update(patch: Partial<OutreachDraft>) {
     const next = { ...draft, ...patch };
     if (
@@ -137,6 +146,17 @@ export function EmailPreview({ draft, fixing = false, onChange, onFix }: EmailPr
         >
           Unapprove
         </Button>
+        {onRegenerate ? (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={regenerating || fixing}
+            onClick={onRegenerate}
+          >
+            <RefreshCw />
+            {regenerating ? 'Regenerating...' : 'Regenerate'}
+          </Button>
+        ) : null}
         <Button
           type="button"
           variant="secondary"

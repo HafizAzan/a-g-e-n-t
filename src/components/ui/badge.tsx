@@ -11,6 +11,8 @@ const badgeVariants = cva(
         pending: "border-zinc-500/40 bg-zinc-500/15 text-zinc-300",
         draft: "border-sky-500/40 bg-sky-500/15 text-sky-300",
         approved: "border-emerald-500/40 bg-emerald-500/15 text-emerald-300",
+        generating: "border-violet-500/40 bg-violet-500/15 text-violet-300",
+        waiting: "border-yellow-500/40 bg-yellow-500/15 text-yellow-300",
         sending: "border-amber-500/40 bg-amber-500/15 text-amber-300",
         sent: "border-green-500/40 bg-green-500/15 text-green-300",
         failed: "border-red-500/40 bg-red-500/15 text-red-300",

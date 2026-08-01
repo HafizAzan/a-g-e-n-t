@@ -11,7 +11,7 @@ import {
 } from "react";
 import type { LeadFormValues } from "@/components/lead-form";
 import type { Lead } from "@/types/lead";
-import type { AttachmentPayload, OutreachDraft } from "@/types/outreach";
+import type { AttachmentPayload, EmailTemplate, OutreachDraft } from "@/types/outreach";
 
 const INITIAL_VALUES: LeadFormValues = {
   prompt: "Find gyms in New York that may need a new website.",
@@ -31,6 +31,10 @@ type AppStateContextValue = {
   setDrafts: (drafts: OutreachDraft[]) => void;
   attachments: AttachmentPayload[];
   setAttachments: (files: AttachmentPayload[]) => void;
+  outreachTemplate: EmailTemplate | null;
+  setOutreachTemplate: (template: EmailTemplate | null) => void;
+  senderName: string;
+  setSenderName: (name: string) => void;
   loading: boolean;
   error: string | null;
   setError: (message: string | null) => void;
@@ -49,6 +53,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
   const [drafts, setDrafts] = useState<OutreachDraft[]>([]);
   const [attachments, setAttachments] = useState<AttachmentPayload[]>([]);
+  const [outreachTemplate, setOutreachTemplate] = useState<EmailTemplate | null>(null);
+  const [senderName, setSenderName] = useState("Your Name");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gmailNotice, setGmailNotice] = useState<string | null>(null);
@@ -128,6 +134,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setDrafts,
       attachments,
       setAttachments,
+      outreachTemplate,
+      setOutreachTemplate,
+      senderName,
+      setSenderName,
       loading,
       error,
       setError,
@@ -143,6 +153,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       selectedIndexes,
       drafts,
       attachments,
+      outreachTemplate,
+      senderName,
       loading,
       error,
       gmailNotice,

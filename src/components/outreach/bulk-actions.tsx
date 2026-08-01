@@ -80,7 +80,13 @@ export function SendLogList({ logs }: { logs: SendLogEntry[] }) {
           >
             <div>
               <p className="font-medium">{log.recipient}</p>
+              <p className="text-muted-foreground">{log.businessName}</p>
               <p className="text-muted-foreground">{log.subject}</p>
+              {log.delayUsedMs ? (
+                <p className="text-xs text-muted-foreground">
+                  Delay before send: {Math.round(log.delayUsedMs / 1000)}s
+                </p>
+              ) : null}
               {log.error ? (
                 <p className="text-red-300">{log.error}</p>
               ) : null}

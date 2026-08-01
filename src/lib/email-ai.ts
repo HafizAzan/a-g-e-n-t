@@ -40,8 +40,11 @@ Use each lead's details:
 - Business Name
 - Category
 - City
-- Website (or missing/poor website)
+- Website Status (MISSING if no website, or note if outdated/poor)
 - AI Notes
+
+Every email must be unique — vary the opening, angle, and wording for each lead.
+Keep tone natural and non-spammy. Avoid ALL CAPS, excessive exclamation marks, or salesy clichés.
 
 Every email must include:
 - subject

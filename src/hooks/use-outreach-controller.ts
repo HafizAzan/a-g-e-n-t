@@ -2,19 +2,25 @@
 
 import { useRef, useState } from "react";
 import { useAppState } from "@/providers/app-state";
-import type {
-  OutreachDraft,
-  SendLogEntry,
-} from "@/types/outreach";
-
-const DELAY_MS = 1200;
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import {
+  buildSafeSendQueue,
+  estimateRemainingMs,
+  formatEtaSeconds,
+  getActiveQueueSettings,
+  getQueueStatus,
+  randomDelayMs,
+  sleepWithCountdown,
+} from "@/lib/queue";
+import { normalizeEmail } from "@/lib/utils/email-validation";
+import type { OutreachDraft, SendLogEntry } from "@/types/outreach";
+import type { QueueSettings, QueueStatus } from "@/types/queue";
 
 function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function businessKey(draft: OutreachDraft) {
+  return `${draft.lead.businessName.trim().toLowerCase()}::${draft.lead.city.trim().toLowerCase()}`;
 }
 
 export function useOutreachController() {
@@ -25,21 +31,65 @@ export function useOutreachController() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
-  const [result, setResult] = useState({ sent: 0, failed: 0 });
+  const [result, setResult] = useState({ sent: 0, failed: 0, skipped: 0 });
   const [logs, setLogs] = useState<SendLogEntry[]>([]);
   const [progress, setProgress] = useState({
     current: 0,
     total: 0,
     recipient: "",
+    businessName: "",
+    phase: "idle" as "idle" | "sending" | "waiting",
+    queueStatus: "idle" as QueueStatus,
+    currentDelaySeconds: 0,
+    countdownSeconds: 0,
+    minDelaySeconds: 60,
+    maxDelaySeconds: 120,
     sent: 0,
     failed: 0,
+    skipped: 0,
     remaining: 0,
     estimatedSeconds: 0,
+    paused: false,
   });
+
   const cancelRef = useRef(false);
+  const pauseRef = useRef(false);
+  const sessionSentEmailsRef = useRef(new Set<string>());
+  const sessionSentBusinessRef = useRef(new Set<string>());
 
   function updateDraft(next: OutreachDraft) {
     setDrafts(drafts.map((d) => (d.id === next.id ? next : d)));
+  }
+
+  function appendLog(entry: Omit<SendLogEntry, "id">) {
+    setLogs((prev) => [{ id: makeId(), ...entry }, ...prev]);
+  }
+
+  function setProgressState(
+    patch: Partial<typeof progress> & {
+      phase?: "idle" | "sending" | "waiting";
+      paused?: boolean;
+    }
+  ) {
+    setProgress((prev) => {
+      const next = { ...prev, ...patch };
+      const phase = next.phase;
+      const paused = next.paused;
+      return {
+        ...next,
+        queueStatus: getQueueStatus(phase, paused),
+      };
+    });
+  }
+
+  async function fetchDefaultAccountId(): Promise<string | undefined> {
+    const res = await fetch("/api/gmail/status");
+    const data = (await res.json()) as {
+      defaultAccountId?: string | null;
+      error?: string;
+    };
+    if (!res.ok) throw new Error(data.error || "Failed to load Gmail account.");
+    return data.defaultAccountId || undefined;
   }
 
   async function reviewAll() {
@@ -163,14 +213,87 @@ export function useOutreachController() {
     );
   }
 
-  async function sendQueue(queue: OutreachDraft[]) {
+  function pauseQueue() {
+    pauseRef.current = true;
+    setProgressState({ paused: true });
+  }
+
+  function resumeQueue() {
+    pauseRef.current = false;
+    setProgressState({ paused: false });
+  }
+
+  async function sendQueue(inputQueue: OutreachDraft[]) {
+    const queueSettings: QueueSettings = getActiveQueueSettings();
+
     cancelRef.current = false;
+    pauseRef.current = false;
     setProgressOpen(true);
     setResultOpen(false);
 
+    const { queue, skipped: preSkipped } = buildSafeSendQueue(
+      inputQueue,
+      sessionSentEmailsRef.current,
+      sessionSentBusinessRef.current
+    );
+
+    let working = [...drafts];
     let sent = 0;
     let failed = 0;
-    let working = [...drafts];
+    let skipped = preSkipped.length;
+
+    for (const { draft, reason } of preSkipped) {
+      working = working.map((d) =>
+        d.id === draft.id
+          ? { ...d, status: "skipped", approved: false, error: reason }
+          : d
+      );
+      appendLog({
+        recipient: draft.lead.email || draft.lead.businessName,
+        businessName: draft.lead.businessName,
+        subject: draft.subject,
+        time: new Date().toLocaleString(),
+        status: "skipped",
+        error: reason,
+        delayUsedMs: null,
+      });
+    }
+    setDrafts(working);
+
+    let accountId: string | undefined;
+    try {
+      accountId = await fetchDefaultAccountId();
+      if (!accountId) {
+        throw new Error("Connect a Gmail account before sending.");
+      }
+    } catch (err) {
+      setProgressOpen(false);
+      setError(err instanceof Error ? err.message : "Gmail not connected.");
+      return;
+    }
+
+    let pendingDelayMs: number | null = null;
+
+    setProgressState({
+      current: 0,
+      total: queue.length,
+      recipient: "",
+      businessName: "",
+      phase: queue.length > 0 ? "sending" : "idle",
+      queueStatus: queue.length > 0 ? "sending" : "idle",
+      currentDelaySeconds: 0,
+      countdownSeconds: 0,
+      minDelaySeconds: queueSettings.minDelaySeconds,
+      maxDelaySeconds: queueSettings.maxDelaySeconds,
+      sent,
+      failed,
+      skipped,
+      remaining: queue.length,
+      estimatedSeconds: formatEtaSeconds(
+        estimateRemainingMs(queue.length, queueSettings)
+      ),
+      paused: false,
+    });
 
     for (let i = 0; i < queue.length; i++) {
       if (cancelRef.current) {
@@ -181,19 +304,34 @@ export function useOutreachController() {
             ? { ...d, status: "skipped", approved: false }
             : d
         );
+        setDrafts(working);
         break;
+      }
+
+      while (pauseRef.current && !cancelRef.current) {
+        setProgressState({ paused: true });
+        await new Promise((r) => setTimeout(r, 300));
       }
 
       const item = queue[i];
       const remaining = queue.length - i;
-      setProgress({
+
+      setProgressState({
         current: i,
         total: queue.length,
         recipient: item.lead.email || item.lead.businessName,
+        businessName: item.lead.businessName,
+        phase: "sending",
+        currentDelaySeconds: 0,
+        countdownSeconds: 0,
         sent,
         failed,
+        skipped,
         remaining,
-        estimatedSeconds: Math.round((remaining * DELAY_MS) / 1000),
+        estimatedSeconds: formatEtaSeconds(
+          estimateRemainingMs(remaining, queueSettings)
+        ),
+        paused: pauseRef.current,
       });
 
       working = working.map((d) =>
@@ -201,102 +339,136 @@ export function useOutreachController() {
       );
       setDrafts(working);
 
-      if (!item.lead.email) {
+      try {
+        const res = await fetch("/api/gmail/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            accountId,
+            to: item.lead.email,
+            subject: item.subject,
+            body: item.body,
+            attachments,
+          }),
+        });
+        const data = (await res.json()) as { error?: string };
+        if (!res.ok) throw new Error(data.error || "Send failed.");
+
+        sent += 1;
+        const normalized = normalizeEmail(item.lead.email);
+        sessionSentEmailsRef.current.add(normalized);
+        sessionSentBusinessRef.current.add(businessKey(item));
+
+        working = working.map((d) =>
+          d.id === item.id
+            ? {
+                ...d,
+                status: "sent",
+                error: "",
+                sentAt: new Date().toISOString(),
+              }
+            : d
+        );
+        setDrafts(working);
+        appendLog({
+          recipient: item.lead.email,
+          businessName: item.lead.businessName,
+          subject: item.subject,
+          time: new Date().toLocaleString(),
+          status: "sent",
+          error: "",
+          delayUsedMs: pendingDelayMs,
+        });
+        pendingDelayMs = null;
+      } catch (err) {
         failed += 1;
-        const message = "Lead has no email address.";
+        const message =
+          err instanceof Error ? err.message : "Failed to send email.";
         working = working.map((d) =>
           d.id === item.id ? { ...d, status: "failed", error: message } : d
         );
         setDrafts(working);
-        setLogs((prev) => [
-          {
-            id: makeId(),
-            recipient: item.lead.businessName,
-            subject: item.subject,
-            time: new Date().toLocaleString(),
-            status: "failed",
-            error: message,
-          },
-          ...prev,
-        ]);
-      } else {
-        try {
-          const res = await fetch("/api/gmail/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: item.lead.email,
-              subject: item.subject,
-              body: item.body,
-              attachments,
-            }),
-          });
-          const data = (await res.json()) as { error?: string };
-          if (!res.ok) throw new Error(data.error || "Send failed.");
-
-          sent += 1;
-          working = working.map((d) =>
-            d.id === item.id
-              ? {
-                  ...d,
-                  status: "sent",
-                  error: "",
-                  sentAt: new Date().toISOString(),
-                }
-              : d
-          );
-          setDrafts(working);
-          setLogs((prev) => [
-            {
-              id: makeId(),
-              recipient: item.lead.email,
-              subject: item.subject,
-              time: new Date().toLocaleString(),
-              status: "sent",
-              error: "",
-            },
-            ...prev,
-          ]);
-        } catch (err) {
-          failed += 1;
-          const message =
-            err instanceof Error ? err.message : "Failed to send email.";
-          working = working.map((d) =>
-            d.id === item.id ? { ...d, status: "failed", error: message } : d
-          );
-          setDrafts(working);
-          setLogs((prev) => [
-            {
-              id: makeId(),
-              recipient: item.lead.email,
-              subject: item.subject,
-              time: new Date().toLocaleString(),
-              status: "failed",
-              error: message,
-            },
-            ...prev,
-          ]);
-        }
+        appendLog({
+          recipient: item.lead.email || item.lead.businessName,
+          businessName: item.lead.businessName,
+          subject: item.subject,
+          time: new Date().toLocaleString(),
+          status: "failed",
+          error: message,
+          delayUsedMs: null,
+        });
       }
 
-      setProgress((prev) => ({
-        ...prev,
+      setProgressState({
         current: i + 1,
         sent,
         failed,
+        skipped,
         remaining: Math.max(queue.length - (i + 1), 0),
-        estimatedSeconds: Math.round(
-          (Math.max(queue.length - (i + 1), 0) * DELAY_MS) / 1000
+        estimatedSeconds: formatEtaSeconds(
+          estimateRemainingMs(
+            Math.max(queue.length - (i + 1), 0),
+            queueSettings
+          )
         ),
-      }));
+      });
 
       if (i < queue.length - 1 && !cancelRef.current) {
-        await sleep(DELAY_MS);
+        const delayMs = randomDelayMs(queueSettings);
+        const delaySeconds = Math.round(delayMs / 1000);
+        pendingDelayMs = delayMs;
+
+        working = working.map((d) =>
+          d.id === queue[i + 1].id ? { ...d, status: "waiting" } : d
+        );
+        setDrafts(working);
+
+        setProgressState({
+          phase: "waiting",
+          currentDelaySeconds: delaySeconds,
+          countdownSeconds: delaySeconds,
+          recipient: queue[i + 1].lead.email || queue[i + 1].lead.businessName,
+          businessName: queue[i + 1].lead.businessName,
+          paused: pauseRef.current,
+        });
+
+        await sleepWithCountdown(
+          delayMs,
+          (secondsLeft) => {
+            setProgressState({
+              countdownSeconds: secondsLeft,
+              paused: pauseRef.current,
+            });
+          },
+          {
+            cancelled: () => cancelRef.current,
+            paused: () => pauseRef.current,
+          }
+        );
+
+        if (cancelRef.current) {
+          working = working.map((d) =>
+            queue.slice(i + 1).some((q) => q.id === d.id) &&
+            d.status !== "sent" &&
+            d.status !== "failed"
+              ? { ...d, status: "skipped", approved: false }
+              : d
+          );
+          setDrafts(working);
+          break;
+        }
       }
     }
 
+    setProgressState({
+      phase: "idle",
+      queueStatus: "idle",
+      paused: false,
+      currentDelaySeconds: 0,
+      countdownSeconds: 0,
+    });
     setProgressOpen(false);
-    setResult({ sent, failed });
+    setResult({ sent, failed, skipped });
     setResultOpen(true);
   }
 
@@ -321,6 +493,8 @@ export function useOutreachController() {
     logs,
     progress,
     cancelRef,
+    pauseQueue,
+    resumeQueue,
     makeId,
     reviewAll,
     fixDraft,

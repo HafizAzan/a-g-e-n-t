@@ -1,8 +1,8 @@
-import { Agent, CursorAgentError } from "@cursor/sdk";
-import type { GenerateLeadsRequest, Lead } from "@/types/lead";
-import { loadCombinedSystemPrompt } from "@/lib/load-prompts";
-import { parseLeadsFromAiText } from "@/lib/parse-leads";
-import { dedupeLeads } from "@/lib/dedupe-leads";
+import { dedupeLeads } from '@/lib/dedupe-leads';
+import { loadCombinedSystemPrompt } from '@/lib/load-prompts';
+import { parseLeadsFromAiText } from '@/lib/parse-leads';
+import type { GenerateLeadsRequest, Lead } from '@/types/lead';
+import { Agent, CursorAgentError } from '@cursor/sdk';
 
 /**
  * Builds only the user message from the form.
@@ -10,42 +10,37 @@ import { dedupeLeads } from "@/lib/dedupe-leads";
  */
 function buildUserMessage(input: GenerateLeadsRequest): string {
   return [
-    "Lead generation request:",
-    "",
+    'Lead generation request:',
+    '',
     `Prompt: ${input.prompt}`,
-    `Country: ${input.country || "not specified"}`,
-    `City: ${input.city || "not specified"}`,
+    `Country: ${input.country || 'not specified'}`,
+    `City: ${input.city || 'not specified'}`,
     `Maximum leads: ${input.limit}`,
-  ].join("\n");
+  ].join('\n');
 }
 
 function buildFullPrompt(systemPrompt: string, userMessage: string): string {
   return [
-    "SYSTEM PROMPT (follow every section below):",
-    "",
+    'SYSTEM PROMPT (follow every section below):',
+    '',
     systemPrompt,
-    "",
-    "====================",
-    "USER MESSAGE",
-    "====================",
-    "",
+    '',
+    '====================',
+    'USER MESSAGE',
+    '====================',
+    '',
     userMessage,
-  ].join("\n");
+  ].join('\n');
 }
 
-export async function generateLeadsWithCursor(
-  input: GenerateLeadsRequest
-): Promise<Lead[]> {
+export async function generateLeadsWithCursor(input: GenerateLeadsRequest): Promise<Lead[]> {
   const apiKey = process.env.CURSOR_API_KEY?.trim();
   if (!apiKey) {
-    throw new Error(
-      "CURSOR_API_KEY is missing. Add it to .env.local and restart the server."
-    );
+    throw new Error('CURSOR_API_KEY is missing. Add it to .env.local and restart the server.');
   }
 
-  const modelId = process.env.CURSOR_MODEL?.trim() || "composer-2.5";
+  const modelId = process.env.CURSOR_MODEL?.trim() || 'composer-2.5';
 
-  // Always re-read markdown files on each request (no cache).
   const systemPrompt = await loadCombinedSystemPrompt();
   const userMessage = buildUserMessage(input);
   const fullPrompt = buildFullPrompt(systemPrompt, userMessage);
@@ -60,12 +55,12 @@ export async function generateLeadsWithCursor(
       },
     });
 
-    if (result.status === "error") {
-      throw new Error(result.error?.message || "Cursor agent run failed.");
+    if (result.status === 'error') {
+      throw new Error(result.error?.message || 'Cursor agent run failed.');
     }
 
     if (!result.result?.trim()) {
-      throw new Error("Cursor agent returned an empty response.");
+      throw new Error('Cursor agent returned an empty response.');
     }
 
     const parsed = parseLeadsFromAiText(result.result);
@@ -75,9 +70,7 @@ export async function generateLeadsWithCursor(
   } catch (error) {
     if (error instanceof CursorAgentError) {
       throw new Error(
-        `Cursor API error: ${error.message}${
-          error.isRetryable ? " (retryable)" : ""
-        }`
+        `Cursor API error: ${error.message}${error.isRetryable ? ' (retryable)' : ''}`,
       );
     }
     throw error;

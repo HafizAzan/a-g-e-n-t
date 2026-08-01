@@ -15,6 +15,7 @@ type ResultScreenProps = {
   kind: "success" | "failed" | "mixed";
   sent: number;
   failed: number;
+  skipped?: number;
   onOpenChange: (open: boolean) => void;
   onRetryFailed: () => void;
 };
@@ -24,6 +25,7 @@ export function SendResultDialog({
   kind,
   sent,
   failed,
+  skipped = 0,
   onOpenChange,
   onRetryFailed,
 }: ResultScreenProps) {
@@ -41,6 +43,7 @@ export function SendResultDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             Sent: {sent}. Failed: {failed}.
+            {skipped > 0 ? ` Skipped: ${skipped}.` : ""}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConnectGmailCard } from "@/components/outreach/connect-gmail-card";
+import { QueueSettingsPanel } from "@/components/outreach/queue-settings-panel";
 import { EmailComposer } from "@/components/outreach/email-composer";
 import { BulkActions, SendLogList } from "@/components/outreach/bulk-actions";
 import { ConfirmSendDialog } from "@/components/outreach/confirm-send-dialog";
@@ -22,6 +23,8 @@ export function OutreachPanel() {
     drafts,
     setDrafts,
     setAttachments,
+    setOutreachTemplate,
+    setSenderName,
   } = useAppState();
 
   const {
@@ -37,6 +40,8 @@ export function OutreachPanel() {
     logs,
     progress,
     cancelRef,
+    pauseQueue,
+    resumeQueue,
     makeId,
     sendQueue,
     startSendApproved,
@@ -56,6 +61,8 @@ export function OutreachPanel() {
   }) {
     setGenerating(true);
     setError(null);
+    setOutreachTemplate(input.template);
+    setSenderName(input.senderName);
     try {
       const selectedLeads = selectedIndexes.map((leadIndex) => ({
         ...leads[leadIndex],
@@ -143,6 +150,8 @@ export function OutreachPanel() {
     <div className="space-y-6">
       <ConnectGmailCard />
 
+      <QueueSettingsPanel />
+
       <EmailComposer
         selectedCount={selectedIndexes.length}
         generating={generating}
@@ -184,13 +193,24 @@ export function OutreachPanel() {
         current={progress.current}
         total={progress.total}
         recipient={progress.recipient}
+        businessName={progress.businessName}
+        phase={progress.phase}
+        queueStatus={progress.queueStatus}
+        currentDelaySeconds={progress.currentDelaySeconds}
+        countdownSeconds={progress.countdownSeconds}
+        minDelaySeconds={progress.minDelaySeconds}
+        maxDelaySeconds={progress.maxDelaySeconds}
         sent={progress.sent}
         failed={progress.failed}
+        skipped={progress.skipped}
         remaining={progress.remaining}
         estimatedSeconds={progress.estimatedSeconds}
+        paused={progress.paused}
         onCancel={() => {
           cancelRef.current = true;
         }}
+        onPause={pauseQueue}
+        onResume={resumeQueue}
       />
 
       <RetryDialog
@@ -213,6 +233,7 @@ export function OutreachPanel() {
         }
         sent={result.sent}
         failed={result.failed}
+        skipped={result.skipped}
         onOpenChange={setResultOpen}
         onRetryFailed={retryFailed}
       />
